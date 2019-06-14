@@ -38,11 +38,13 @@ namespace SpaceSim
         int numVertices;
         public Matrix Transform;
         Color color;
-        public Sphere(Matrix transform, Color color, int numVertices)
+		float scale;
+        public Sphere(Matrix transform, Color color, int numVertices, float scale)
         {
             this.Transform = transform;
             this.color = color;
             this.numVertices = numVertices;
+			this.scale = scale;
             graphics = SpaceSim.World.GraphicsDevice;
             effect = new BasicEffect(SpaceSim.Graphics);
             effect.EnableDefaultLighting();
@@ -73,7 +75,7 @@ namespace SpaceSim
                     point.Normalize();
                     Vector3 normal = point;
 
-                    vertices[x + y * numVertices] = new VertexPositionColorNormal() { Position = point, Color = color, Normal = normal };
+                    vertices[x + y * numVertices] = new VertexPositionColorNormal() { Position = point * scale, Color = color, Normal = normal };
                 }
             }
         }
