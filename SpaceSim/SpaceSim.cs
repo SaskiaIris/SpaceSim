@@ -32,6 +32,7 @@ namespace SpaceSim
 		Sphere jupiter;
 		Sphere saturn;
 		Sphere uranus;
+        Sphere moon;
 
         Spaceship spaceship;
         Vector3 spaceshipPosition = new Vector3(0f, 28f, 77f);
@@ -84,24 +85,28 @@ namespace SpaceSim
 
             spheres = new List<Sphere>();
 
-
             spheres.Add(sun = new Sphere(Matrix.CreateTranslation(0, 0, 0), Color.Yellow, 30, 2, 0));
 			spheres.Add(earth = new Sphere(Matrix.CreateTranslation(16, 0, 0), Color.DeepSkyBlue, 30, 1, 0.31f));
 			spheres.Add(mars = new Sphere(Matrix.CreateTranslation(21, 0, 0), Color.Red, 30, 0.6f, 0.39f));
 			spheres.Add(jupiter = new Sphere(Matrix.CreateTranslation(27, 0, 0), Color.Orange, 30, 1.7f, 0.15f));
 			spheres.Add(saturn = new Sphere(Matrix.CreateTranslation(36, 0, 0), Color.Khaki, 30, 1.6f, 0.5f));
 			spheres.Add(uranus = new Sphere(Matrix.CreateTranslation(43, 0, 0), Color.Cyan, 30, 1.5f, 0.21f));
+            spheres.Add(moon = new Sphere(Matrix.CreateTranslation(0.5f, 0.5f, 0.5f) * Matrix.CreateTranslation(earth.transform.Translation) * Matrix.CreateTranslation(2, 0, 0), Color.LightGray, 30, 0.5f, 1.5f));
+
+            moon.transform *= Matrix.CreateTranslation(-earth.transform.Translation);
 
             Random rand = new Random();
 
             foreach (Sphere rotatingSphere in spheres) {
                 if (rotatingSphere.color != Color.Yellow)
                 {
-                    rotatingSphere.Transform *= Matrix.CreateRotationY((float)(rand.NextDouble() * 2.0 * Math.PI));
+                    rotatingSphere.transform *= Matrix.CreateRotationY((float)(rand.NextDouble() * 2.0 * Math.PI));
                 }
             }
 
-			base.Initialize();
+            moon.transform *= Matrix.CreateTranslation(earth.transform.Translation);
+
+            base.Initialize();
         }
 
         /// <summary>
@@ -155,15 +160,21 @@ namespace SpaceSim
         protected override void Update(GameTime gameTime)
         {
             TimeSpan elapsedGameTime = gameTime.ElapsedGameTime;
-            foreach(Sphere rotatingSphere in spheres)
+            moon.transform *= Matrix.CreateTranslation(-earth.transform.Translation);
+            foreach (Sphere rotatingSphere in spheres)
             {
-                transformRotatingSphere = rotatingSphere.Transform;
-                sphereRotationY = Matrix.CreateRotationY((float)elapsedGameTime.TotalSeconds * rotatingSphere.rotatingSpeed);
-                rotatingSphere.Transform = transformRotatingSphere * sphereRotationY;
+                if (rotatingSphere.color != Color.Yellow)
+                {
+                    transformRotatingSphere = rotatingSphere.transform;
+                    sphereRotationY = Matrix.CreateRotationY((float)elapsedGameTime.TotalSeconds * rotatingSphere.rotatingSpeed);
+                    rotatingSphere.transform = transformRotatingSphere * sphereRotationY;
+                }
             }
+            moon.transform *= Matrix.CreateTranslation(earth.transform.Translation);
+
 
             cameraPosition = Vector3.Transform(spaceshipFollowPoint, spaceship.Transform);
-            cameraLookAt = Vector3.Transform(spaceshipLookAtPoint, spaceship.Transform);
+            cameraLookAt = Vector3.Transform(spaceshipLookAtPoint, spaceship.Transform);    
             cameraOrientationMatrix = spaceshipOrientationMatrix;
 
             // Helpers for input

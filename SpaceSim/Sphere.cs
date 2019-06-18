@@ -36,13 +36,13 @@ namespace SpaceSim
         BasicEffect effect;
         GraphicsDevice graphics;
         int numVertices;
-        public Matrix Transform;
+        public Matrix transform;
         public Color color;
 		float scale;
         public float rotatingSpeed;
         public Sphere(Matrix transform, Color color, int numVertices, float scale, float rotatingSpeed)
         {
-            this.Transform = transform;
+            this.transform = transform;
             this.color = color;
             this.numVertices = numVertices;
 			this.scale = scale;
@@ -109,7 +109,7 @@ namespace SpaceSim
         {
             effect.View = SpaceSim.World.View;
             effect.Projection = SpaceSim.World.Projection;
-            effect.World = this.Transform;
+            effect.World = this.transform;
             graphics.SetVertexBuffer(vbuffer);
             graphics.Indices = ibuffer;
 
