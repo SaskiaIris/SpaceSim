@@ -37,14 +37,16 @@ namespace SpaceSim
         GraphicsDevice graphics;
         int numVertices;
         public Matrix Transform;
-        Color color;
+        public Color color;
 		float scale;
-        public Sphere(Matrix transform, Color color, int numVertices, float scale)
+        public float rotatingSpeed;
+        public Sphere(Matrix transform, Color color, int numVertices, float scale, float rotatingSpeed)
         {
             this.Transform = transform;
             this.color = color;
             this.numVertices = numVertices;
 			this.scale = scale;
+            this.rotatingSpeed = rotatingSpeed;
             graphics = SpaceSim.World.GraphicsDevice;
             effect = new BasicEffect(SpaceSim.Graphics);
             effect.EnableDefaultLighting();
