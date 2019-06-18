@@ -22,10 +22,16 @@ namespace SpaceSim
         public Matrix View;
         public Matrix Projection;
         public static GraphicsDevice Graphics;
+		Random random = new Random();
 
         List<Sphere> spheres;
 
         Sphere sun;
+		Sphere earth;
+		Sphere mars;
+		Sphere jupiter;
+		Sphere saturn;
+		Sphere uranus;
 
         Spaceship spaceship;
         Vector3 spaceshipPosition = new Vector3(0f, 28f, 77f);
@@ -76,11 +82,14 @@ namespace SpaceSim
             spheres = new List<Sphere>();
 
 
-            spheres.Add(sun = new Sphere(Matrix.Identity, Color.Yellow, 30, 2));
+            spheres.Add(sun = new Sphere(Matrix.CreateTranslation(0, 0, 0), Color.Yellow, 30, 2));
+			spheres.Add(earth = new Sphere(Matrix.CreateTranslation(16, 0, 0), Color.DeepSkyBlue, 30, 1));
+			spheres.Add(mars = new Sphere(Matrix.CreateTranslation(21, 0, 0), Color.Red, 30, 0.6f));
+			spheres.Add(jupiter = new Sphere(Matrix.CreateTranslation(27, 0, 0), Color.Orange, 30, 1.7f));
+			spheres.Add(saturn = new Sphere(Matrix.CreateTranslation(36, 0, 0), Color.Khaki, 30, 1.6f));
+			spheres.Add(uranus = new Sphere(Matrix.CreateTranslation(43, 0, 0), Color.Cyan, 30, 1.5f));
 
-
-
-            base.Initialize();
+			base.Initialize();
         }
 
         /// <summary>
