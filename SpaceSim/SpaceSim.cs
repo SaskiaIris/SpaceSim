@@ -25,7 +25,7 @@ namespace SpaceSim
 		Random random = new Random();
 
         List<Sphere> spheres;
-		//List<Bullet> bullets;
+		List<Bullet> bullets;
 
         Sphere sun;
 		Sphere earth;
@@ -58,7 +58,6 @@ namespace SpaceSim
 
 		float moonRotation;
 		float mouseXDistance, mouseYDistance;
-		//float yawX, pitchY;
 		float roll, drag;
 		float rollVelocity, forwardVelocity;
 		float forward;
@@ -95,7 +94,7 @@ namespace SpaceSim
             spriteBatch = new SpriteBatch(Graphics);
 
             spheres = new List<Sphere>();
-			//bullets = new List<Bullet>();
+			bullets = new List<Bullet>();
 
 			screenCenter = new Vector2((float)Window.ClientBounds.Width / 2, (float)Window.ClientBounds.Height / 2);
 
@@ -107,8 +106,6 @@ namespace SpaceSim
 			spheres.Add(uranus = new Sphere(Matrix.CreateTranslation(43, 0, 0), Color.Cyan, 30, 1.5f, 0.21f));
             spheres.Add(moon = new Sphere(Matrix.CreateTranslation(0.5f, 0.5f, 0.5f) * Matrix.CreateTranslation(earth.transform.Translation) * Matrix.CreateTranslation(2, 0, 0), Color.LightGray, 30, 0.5f, 1.5f));
 
-            //moon.transform *= Matrix.CreateTranslation(-earth.transform.Translation);
-
             Random rand = new Random();
 
 			//De startrotaties van de spheres maken
@@ -119,10 +116,9 @@ namespace SpaceSim
                 }
             }
 
-			/*foreach(Sphere thisBullet in bullets) {
-			 * bullet.Draw();
-			 * }
-			 */
+			 foreach(Sphere thisBullet in bullets) {
+				thisBullet.Draw();
+			 }
 
 			drag = 0.95f;
 
@@ -166,10 +162,14 @@ namespace SpaceSim
 
 			spaceship.Draw();
 
-            foreach (Sphere sphere in spheres)
+            foreach(Sphere sphere in spheres)
             {
                 sphere.Draw();
             }
+			foreach(Sphere thisBullet in bullets)
+			{
+				thisBullet.Draw();
+			}
 
             spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.LinearWrap, DepthStencilState.Default, RasterizerState.CullCounterClockwise);
             spriteBatch.Draw(reticle, new Vector2(mousePosition.X - reticleHalfWidth, mousePosition.Y - reticleHalfHeight), Color.White);
@@ -223,22 +223,6 @@ namespace SpaceSim
 			//Berekenen van de afstand van de muis tot het midden van het scherm
 			mouseXDistance = (mousePosition.X - screenCenter.X) / screenCenter.X;
 			mouseYDistance = (mousePosition.Y - screenCenter.Y) / screenCenter.Y;
-
-			/*if(mouseXDistance < 0.0)
-			{
-				yawX = (float) -Math.Pow(-mouseXDistance, 1.5);
-			} else
-			{
-				yawX = (float) Math.Pow(mouseXDistance, 1.5);
-			}
-
-			if(mouseYDistance < 0.0)
-			{
-				pitchY = (float) -Math.Pow(-mouseYDistance, 1.5);
-			} else
-			{
-				pitchY = (float) Math.Pow(mouseYDistance, 1.5);
-			}*/
 
 			if(aKeyDown)
 			{
@@ -301,6 +285,24 @@ namespace SpaceSim
 			speed = this.forwardVelocity * this.spaceshipOrientationMatrix.Forward;
 			newSpeed = speed * (float)elapsedGameTime.TotalSeconds;
 			this.spaceshipPosition = spaceshipPosition + newSpeed;
+
+			if(mouseDown)
+			{
+				this.bullets.Add(new Bullet(Vector3.Transform(bulletSpawnPosition, spaceship.Transform), spaceshipOrientationMatrix.Forward * (5f + this.forwardVelocity)));
+			}
+
+			foreach(Bullet thisBullet in bullets)
+			{
+				thisBullet.Update((float)elapsedGameTime.TotalSeconds);
+			}
+
+			for(int i = bullets.Count - 1; i >= 0; --i)
+			{
+				if((double)bullets[i].Position.LengthSquared() > 40000)
+				{
+					bullets.RemoveAt(i);
+				}
+			}
 
 			base.Update(gameTime);
         }
