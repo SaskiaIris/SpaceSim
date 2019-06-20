@@ -25,6 +25,7 @@ namespace SpaceSim
 		Random random = new Random();
 
         List<Sphere> spheres;
+		//List<Bullet> bullets;
 
         Sphere sun;
 		Sphere earth;
@@ -56,6 +57,14 @@ namespace SpaceSim
         Matrix sphereRotationY;
 
 		float moonRotation;
+		float mouseXDistance, mouseYDistance;
+		//float yawX, pitchY;
+		float roll, drag;
+		float rollVelocity, forwardVelocity;
+		float forward;
+		float maxRoll = 200f;
+		float yawChange, pitchChange, rollChange;
+		Vector3 speed, newSpeed;
 
         public SpaceSim()
             : base()
@@ -86,6 +95,9 @@ namespace SpaceSim
             spriteBatch = new SpriteBatch(Graphics);
 
             spheres = new List<Sphere>();
+			//bullets = new List<Bullet>();
+
+			screenCenter = new Vector2((float)Window.ClientBounds.Width / 2, (float)Window.ClientBounds.Height / 2);
 
             spheres.Add(sun = new Sphere(Matrix.CreateTranslation(0, 0, 0), Color.Yellow, 30, 2, 0));
 			spheres.Add(earth = new Sphere(Matrix.CreateTranslation(16, 0, 0), Color.DeepSkyBlue, 30, 1, 0.31f));
@@ -99,15 +111,20 @@ namespace SpaceSim
 
             Random rand = new Random();
 
-            foreach (Sphere rotatingSphere in spheres) {
+			//De startrotaties van de spheres maken
+            foreach(Sphere rotatingSphere in spheres) {
                 if (rotatingSphere.color != Color.Yellow)
                 {
                     rotatingSphere.transform *= Matrix.CreateRotationY((float)(rand.NextDouble() * 2.0 * Math.PI));
                 }
             }
-			//moon.transform *= Matrix.CreateRotationX(1.570796f);
-			//moon.transform *= Matrix.CreateRotationY(-1.570796f);
-			//moon.transform *= Matrix.CreateTranslation(earth.transform.Translation);
+
+			/*foreach(Sphere thisBullet in bullets) {
+			 * bullet.Draw();
+			 * }
+			 */
+
+			drag = 0.95f;
 
             base.Initialize();
         }
@@ -147,12 +164,12 @@ namespace SpaceSim
 
             skybox.Draw();
 
+			spaceship.Draw();
+
             foreach (Sphere sphere in spheres)
             {
                 sphere.Draw();
             }
-
-
 
             spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.LinearWrap, DepthStencilState.Default, RasterizerState.CullCounterClockwise);
             spriteBatch.Draw(reticle, new Vector2(mousePosition.X - reticleHalfWidth, mousePosition.Y - reticleHalfHeight), Color.White);
@@ -163,7 +180,8 @@ namespace SpaceSim
         protected override void Update(GameTime gameTime)
         {
             TimeSpan elapsedGameTime = gameTime.ElapsedGameTime;
-            //moon.transform *= Matrix.CreateTranslation(-earth.transform.Translation);
+            
+			//Het draaien van alle planeten
             foreach (Sphere rotatingSphere in spheres)
             {
                 if (rotatingSphere.color != Color.Yellow)
@@ -174,13 +192,10 @@ namespace SpaceSim
                 }
             }
 
-
-			//moon.transform = Matrix.CreateScale(0.5f);
+			//Maan transformaties
 			moon.transform = Matrix.CreateTranslation(2f, 0.0f, 0.0f);
-			moon.transform *= Matrix.CreateRotationY(moonRotation += 1.5f * (float)gameTime.ElapsedGameTime.TotalSeconds);
+			moon.transform *= Matrix.CreateRotationY(moonRotation += 1.5f * (float)elapsedGameTime.TotalSeconds);
 			moon.transform *= Matrix.CreateRotationX(MathHelper.PiOver2);
-			//moon.transform *= Matrix.CreateTranslation(Vector3.Transform(Vector3.Zero, earth.transform));
-			//moon.transform *= Matrix.CreateTranslation(earth.transform.Translation);
 			moon.transform *= earth.transform;
 
 			cameraPosition = Vector3.Transform(spaceshipFollowPoint, spaceship.Transform);
@@ -193,7 +208,10 @@ namespace SpaceSim
             aKeyDown = keyboard.IsKeyDown(Keys.A);
             sKeyDown = keyboard.IsKeyDown(Keys.S);
             dKeyDown = keyboard.IsKeyDown(Keys.D);
-            if (keyboard.IsKeyDown(Keys.Escape)) Exit();
+			if (keyboard.IsKeyDown(Keys.Escape))
+			{
+				Exit();
+			}
             MouseState mouse = Mouse.GetState();
             mousePosition = mouse.Position;
             mouseButton = mouse.LeftButton == ButtonState.Pressed;
@@ -201,10 +219,90 @@ namespace SpaceSim
             lastMouseButton = mouseButton;
 
             skybox.Transform = Matrix.CreateScale(1000f) * Matrix.CreateTranslation(cameraPosition);
+			
+			//Berekenen van de afstand van de muis tot het midden van het scherm
+			mouseXDistance = (mousePosition.X - screenCenter.X) / screenCenter.X;
+			mouseYDistance = (mousePosition.Y - screenCenter.Y) / screenCenter.Y;
 
+			/*if(mouseXDistance < 0.0)
+			{
+				yawX = (float) -Math.Pow(-mouseXDistance, 1.5);
+			} else
+			{
+				yawX = (float) Math.Pow(mouseXDistance, 1.5);
+			}
 
+			if(mouseYDistance < 0.0)
+			{
+				pitchY = (float) -Math.Pow(-mouseYDistance, 1.5);
+			} else
+			{
+				pitchY = (float) Math.Pow(mouseYDistance, 1.5);
+			}*/
 
-            base.Update(gameTime);
+			if(aKeyDown)
+			{
+				roll = 5f;
+			} else if(dKeyDown)
+			{
+				roll = -5f;
+			} else
+			{
+				roll = 0f;
+			}
+
+			rollVelocity = (float)(rollVelocity + (roll * elapsedGameTime.TotalSeconds));
+
+			if(rollVelocity > maxRoll)
+			{
+				rollVelocity = maxRoll;
+			} else if(rollVelocity < -maxRoll)
+			{
+				rollVelocity = -maxRoll;
+			}
+
+			if(!aKeyDown && !dKeyDown)
+			{
+				rollVelocity *= drag;
+			}
+
+			yawChange = -1 * (float)(mouseXDistance * elapsedGameTime.TotalSeconds);
+			pitchChange = -1 * (float)(mouseYDistance * elapsedGameTime.TotalSeconds);
+			rollChange = (float)(rollVelocity * elapsedGameTime.TotalSeconds);
+
+			RotateOrientationMatrixByYawPitchRoll(ref spaceshipOrientationMatrix, yawChange, pitchChange, rollChange);
+			spaceship.Transform = spaceshipOrientationMatrix * Matrix.CreateTranslation(this.spaceshipPosition);
+
+			if(wKeyDown)
+			{
+				forward += 1f;
+			} else if(sKeyDown)
+			{
+				forward -= 1f;
+			} else
+			{
+				forward = 0f;
+			}
+			this.forwardVelocity = (float)(forwardVelocity + (forward * elapsedGameTime.TotalSeconds));
+
+			if(this.forwardVelocity > 100f)
+			{
+				this.forwardVelocity = 100f;
+			} else if(this.forwardVelocity < -100f)
+			{
+				this.forwardVelocity = -100f;
+			}
+
+			if(!wKeyDown && !sKeyDown)
+			{
+				this.forwardVelocity *= 0.98f;
+			}
+
+			speed = this.forwardVelocity * this.spaceshipOrientationMatrix.Forward;
+			newSpeed = speed * (float)elapsedGameTime.TotalSeconds;
+			this.spaceshipPosition = spaceshipPosition + newSpeed;
+
+			base.Update(gameTime);
         }
 
         static void RotateOrientationMatrixByYawPitchRoll(ref Matrix matrix, float yawChange, float pitchChange, float rollChange)
