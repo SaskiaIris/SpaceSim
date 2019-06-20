@@ -55,6 +55,8 @@ namespace SpaceSim
         Matrix transformRotatingSphere;
         Matrix sphereRotationY;
 
+		float moonRotation;
+
         public SpaceSim()
             : base()
         {
@@ -93,7 +95,7 @@ namespace SpaceSim
 			spheres.Add(uranus = new Sphere(Matrix.CreateTranslation(43, 0, 0), Color.Cyan, 30, 1.5f, 0.21f));
             spheres.Add(moon = new Sphere(Matrix.CreateTranslation(0.5f, 0.5f, 0.5f) * Matrix.CreateTranslation(earth.transform.Translation) * Matrix.CreateTranslation(2, 0, 0), Color.LightGray, 30, 0.5f, 1.5f));
 
-            moon.transform *= Matrix.CreateTranslation(-earth.transform.Translation);
+            //moon.transform *= Matrix.CreateTranslation(-earth.transform.Translation);
 
             Random rand = new Random();
 
@@ -103,8 +105,9 @@ namespace SpaceSim
                     rotatingSphere.transform *= Matrix.CreateRotationY((float)(rand.NextDouble() * 2.0 * Math.PI));
                 }
             }
-
-            moon.transform *= Matrix.CreateTranslation(earth.transform.Translation);
+			//moon.transform *= Matrix.CreateRotationX(1.570796f);
+			//moon.transform *= Matrix.CreateRotationY(-1.570796f);
+			//moon.transform *= Matrix.CreateTranslation(earth.transform.Translation);
 
             base.Initialize();
         }
@@ -160,7 +163,7 @@ namespace SpaceSim
         protected override void Update(GameTime gameTime)
         {
             TimeSpan elapsedGameTime = gameTime.ElapsedGameTime;
-            moon.transform *= Matrix.CreateTranslation(-earth.transform.Translation);
+            //moon.transform *= Matrix.CreateTranslation(-earth.transform.Translation);
             foreach (Sphere rotatingSphere in spheres)
             {
                 if (rotatingSphere.color != Color.Yellow)
@@ -170,10 +173,17 @@ namespace SpaceSim
                     rotatingSphere.transform = transformRotatingSphere * sphereRotationY;
                 }
             }
-            moon.transform *= Matrix.CreateTranslation(earth.transform.Translation);
 
 
-            cameraPosition = Vector3.Transform(spaceshipFollowPoint, spaceship.Transform);
+			//moon.transform = Matrix.CreateScale(0.5f);
+			moon.transform = Matrix.CreateTranslation(2f, 0.0f, 0.0f);
+			moon.transform *= Matrix.CreateRotationY(moonRotation += 1.5f * (float)gameTime.ElapsedGameTime.TotalSeconds);
+			moon.transform *= Matrix.CreateRotationX(MathHelper.PiOver2);
+			//moon.transform *= Matrix.CreateTranslation(Vector3.Transform(Vector3.Zero, earth.transform));
+			//moon.transform *= Matrix.CreateTranslation(earth.transform.Translation);
+			moon.transform *= earth.transform;
+
+			cameraPosition = Vector3.Transform(spaceshipFollowPoint, spaceship.Transform);
             cameraLookAt = Vector3.Transform(spaceshipLookAtPoint, spaceship.Transform);    
             cameraOrientationMatrix = spaceshipOrientationMatrix;
 
